@@ -36,7 +36,7 @@
   </div>
 
   <script>
-    // Converted Excel data to JavaScript array
+    // Student data array
     const studentData = [
       {
         SeatNo: "S101",
@@ -65,17 +65,21 @@
         Block: "C-305",
         MapURL: "https://maps.google.com/?q=Block+C"
       }
-      // Add more students here as needed
     ];
 
     let currentStudent = null;
 
     function findStudent() {
-      const seatNo = document.getElementById("seatNo").value.trim();
-      const examDate = document.getElementById("examDate").value;
+      const seatNoInput = document.getElementById("seatNo").value.trim().toUpperCase();
+      const examDateInput = document.getElementById("examDate").value; // yyyy-mm-dd
+
+      if (!seatNoInput || !examDateInput) {
+        alert("Please enter Seat Number and Exam Date");
+        return;
+      }
 
       currentStudent = studentData.find(
-        s => s.SeatNo === seatNo && s.ExamDate === examDate
+        s => s.SeatNo.toUpperCase() === seatNoInput && s.ExamDate === examDateInput
       );
 
       if (currentStudent) {
@@ -85,7 +89,7 @@
         document.getElementById("block").textContent = currentStudent.Block;
         document.getElementById("result").style.display = "block";
       } else {
-        alert("Student not found. Please check your Seat No and Exam Date.");
+        alert("Student not found. Please check Seat Number and Exam Date.");
         document.getElementById("result").style.display = "none";
       }
     }
