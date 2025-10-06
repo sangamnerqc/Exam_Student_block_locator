@@ -39,6 +39,20 @@
   <script>
     const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLWAt7sXY_iv_GBv9S7YdN4TkH7Wy_zQq9d1D9ItxGchX7O81sO5NKc2KhD5PnpdAPTcbG7tCooRXa/pub?output=csv";
 
+    // Map building codes to full names
+    const buildingNames = {
+      "PB": "Parakh Bhavan",
+      "KB": "Kashalya Bhavan",
+      "RB": "Research Building",
+      "PH": "Physics Building",
+      "CM": "Commerce Building",
+      "CS": "Computer Science",
+      "BEd": "B.Ed. Building",
+      "SC": "Science Building",
+      "LAW": "Law College"
+    };
+
+    // Map building codes to Google Map URLs
     const buildingMapLinks = {
       "PB": "https://maps.app.goo.gl/95EhvGe1MbxkAaYo6",
       "KB": "https://maps.app.goo.gl/Qr3EHj2n9n8ihdJV6",
@@ -54,6 +68,7 @@
     let studentData = [];
     let currentStudent = null;
 
+    // Convert input date from YYYY-MM-DD to DD-MM-YYYY
     function formatDateToDDMMYYYY(dateStr) {
       const parts = dateStr.split("-");
       return `${parts[2]}-${parts[1]}-${parts[0]}`;
@@ -94,10 +109,15 @@
       );
 
       if (currentStudent) {
+        const buildingCode = currentStudent.Building.trim();
+        const buildingFullName = buildingNames[buildingCode] || buildingCode;
+        const blockInfo = `${buildingCode}-${currentStudent.Block}`;
+
         document.getElementById("name").textContent = currentStudent.Name;
         document.getElementById("seat").textContent = currentStudent.SeatNo;
-        document.getElementById("building").textContent = currentStudent.Building;
-        document.getElementById("block").textContent = currentStudent.Block;
+        document.getElementById("building").textContent = buildingFullName;
+        document.getElementById("block").textContent = blockInfo;
+
         document.getElementById("result").style.display = "block";
       } else {
         alert("Student not found. Please check Seat Number and Exam Date.");
@@ -107,8 +127,8 @@
 
     function openMap() {
       if (currentStudent && currentStudent.Building) {
-        const buildingName = currentStudent.Building.trim();
-        const mapURL = buildingMapLinks[buildingName];
+        const buildingCode = currentStudent.Building.trim();
+        const mapURL = buildingMapLinks[buildingCode];
 
         if (mapURL) {
           window.open(mapURL, "_blank");
