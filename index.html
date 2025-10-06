@@ -37,12 +37,11 @@
   </div>
 
   <script>
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/YOUR_SHEET_ID/pub?output=csv"; // replace this
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBAZs-1awghMsXEp9FEYAJDZ3JtuSYPv-BYZkUVMY5GevOE-2tbZmJ0RNL-hMi7Q/pub?output=csv"; 
 
     let studentData = [];
     let currentStudent = null;
 
-    // Load CSV from Google Sheets
     function loadStudentData(callback) {
       Papa.parse(sheetURL, {
         download: true,
