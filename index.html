@@ -16,10 +16,44 @@
     #result {
       margin-top: 30px;
       display: none;
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    }
+    #college-logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: 10px;
+    }
+    #college-name {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    #time {
+      color: red;
+      font-weight: bold;
+    }
+    footer {
+      margin-top: 50px;
+      font-size: 0.9em;
+      color: #555;
     }
   </style>
 </head>
 <body>
+
+  <!-- College Logo -->
+  <img src="logo.png" 
+       alt="College Logo" id="college-logo" />
+
+  <!-- College Name -->
+  <div id="college-name">Sangamner College</div>
+
   <h1>Find Your Exam Block</h1>
 
   <input type="text" id="seatNo" placeholder="Enter Seat Number" />
@@ -33,13 +67,17 @@
     <p><strong>Seat No:</strong> <span id="seat"></span></p>
     <p><strong>Building:</strong> <span id="building"></span></p>
     <p><strong>Block:</strong> <span id="block"></span></p>
+    <p><strong>Time:</strong> <span id="time"></span></p>
     <button id="mapBtn" onclick="openMap()">View on Google Map</button>
   </div>
+
+  <footer>
+    Contact: <a href="mailto:ajitkaranjekar@sangamnercollege.edu.in">ajitkaranjekar@sangamnercollege.edu.in</a>
+  </footer>
 
   <script>
     const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLWAt7sXY_iv_GBv9S7YdN4TkH7Wy_zQq9d1D9ItxGchX7O81sO5NKc2KhD5PnpdAPTcbG7tCooRXa/pub?output=csv";
 
-    // Map building codes to full names
     const buildingNames = {
       "PB": "Parakh Bhavan",
       "KB": "Kashalya Bhavan",
@@ -52,7 +90,6 @@
       "LAW": "Law College"
     };
 
-    // Map building codes to Google Map URLs
     const buildingMapLinks = {
       "PB": "https://maps.app.goo.gl/95EhvGe1MbxkAaYo6",
       "KB": "https://maps.app.goo.gl/Qr3EHj2n9n8ihdJV6",
@@ -68,7 +105,6 @@
     let studentData = [];
     let currentStudent = null;
 
-    // Convert input date from YYYY-MM-DD to DD-MM-YYYY
     function formatDateToDDMMYYYY(dateStr) {
       const parts = dateStr.split("-");
       return `${parts[2]}-${parts[1]}-${parts[0]}`;
@@ -117,6 +153,7 @@
         document.getElementById("seat").textContent = currentStudent.SeatNo;
         document.getElementById("building").textContent = buildingFullName;
         document.getElementById("block").textContent = blockInfo;
+        document.getElementById("time").textContent = currentStudent.Time || "Not available";
 
         document.getElementById("result").style.display = "block";
       } else {
