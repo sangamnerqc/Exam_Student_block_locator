@@ -2,7 +2,6 @@
 <html>
 <head>
   <title>Exam Block Finder</title>
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -37,26 +36,41 @@
   </div>
 
   <script>
-    let studentData = [];
+    // Converted Excel data to JavaScript array
+    const studentData = [
+      {
+        SeatNo: "S101",
+        ExamDate: "2025-10-08",
+        RollNo: "R01",
+        Name: "Ajay Patil",
+        Building: "Main",
+        Block: "A-101",
+        MapURL: "https://maps.google.com/?q=Block+A"
+      },
+      {
+        SeatNo: "S102",
+        ExamDate: "2025-10-08",
+        RollNo: "R02",
+        Name: "Neha Deshmukh",
+        Building: "Science",
+        Block: "B-204",
+        MapURL: "https://maps.google.com/?q=Block+B"
+      },
+      {
+        SeatNo: "S103",
+        ExamDate: "2025-10-09",
+        RollNo: "R03",
+        Name: "Ravi Shinde",
+        Building: "Commerce",
+        Block: "C-305",
+        MapURL: "https://maps.google.com/?q=Block+C"
+      }
+      // Add more students here as needed
+    ];
+
     let currentStudent = null;
 
-    async function loadExcelData() {
-      // Raw GitHub URL of your Excel file
-      const url = "https://github.com/sangamnerqc/Exam_Student_block_locator/raw/main/sample_student_data.xlsx";
-      
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer, { type: "buffer" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      studentData = XLSX.utils.sheet_to_json(sheet);
-    }
-
-    async function findStudent() {
-      if (studentData.length === 0) {
-        await loadExcelData();
-      }
-
+    function findStudent() {
       const seatNo = document.getElementById("seatNo").value.trim();
       const examDate = document.getElementById("examDate").value;
 
