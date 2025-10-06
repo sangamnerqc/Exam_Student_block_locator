@@ -37,10 +37,16 @@
   </div>
 
   <script>
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLWAt7sXY_iv_GBv9S7YdN4TkH7Wy_zQq9d1D9ItxGchX7O81sO5NKc2KhD5PnpdAPTcbG7tCooRXa/pub?output=csv"; 
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLWAt7sXY_iv_GBv9S7YdN4TkH7Wy_zQq9d1D9ItxGchX7O81sO5NKc2KhD5PnpdAPTcbG7tCooRXa/pub?output=csv";
 
     let studentData = [];
     let currentStudent = null;
+
+    // Convert 'YYYY-MM-DD' to 'DD-MM-YYYY'
+    function formatDateToDDMMYYYY(dateStr) {
+      const parts = dateStr.split("-");
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
 
     function loadStudentData(callback) {
       Papa.parse(sheetURL, {
@@ -62,10 +68,12 @@
         return;
       }
 
+      const formattedDate = formatDateToDDMMYYYY(examDateInput);  // Convert format
+
       if (studentData.length === 0) {
-        loadStudentData(() => matchStudent(seatNoInput, examDateInput));
+        loadStudentData(() => matchStudent(seatNoInput, formattedDate));
       } else {
-        matchStudent(seatNoInput, examDateInput);
+        matchStudent(seatNoInput, formattedDate);
       }
     }
 
