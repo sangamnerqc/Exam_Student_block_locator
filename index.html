@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Exam Block Finder</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -36,50 +37,42 @@
   </div>
 
   <script>
-    // Student data array
-    const studentData = [
-      {
-        SeatNo: "S101",
-        ExamDate: "2025-10-08",
-        RollNo: "R01",
-        Name: "Ajay Patil",
-        Building: "Main",
-        Block: "A-101",
-        MapURL: "https://maps.google.com/?q=Block+A"
-      },
-      {
-        SeatNo: "S102",
-        ExamDate: "2025-10-08",
-        RollNo: "R02",
-        Name: "Neha Deshmukh",
-        Building: "Science",
-        Block: "B-204",
-        MapURL: "https://maps.google.com/?q=Block+B"
-      },
-      {
-        SeatNo: "S103",
-        ExamDate: "2025-10-09",
-        RollNo: "R03",
-        Name: "Ravi Shinde",
-        Building: "Commerce",
-        Block: "C-305",
-        MapURL: "https://maps.google.com/?q=Block+C"
-      }
-    ];
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/YOUR_SHEET_ID/pub?output=csv"; // replace this
 
+    let studentData = [];
     let currentStudent = null;
+
+    // Load CSV from Google Sheets
+    function loadStudentData(callback) {
+      Papa.parse(sheetURL, {
+        download: true,
+        header: true,
+        complete: function(results) {
+          studentData = results.data;
+          callback();
+        }
+      });
+    }
 
     function findStudent() {
       const seatNoInput = document.getElementById("seatNo").value.trim().toUpperCase();
-      const examDateInput = document.getElementById("examDate").value; // yyyy-mm-dd
+      const examDateInput = document.getElementById("examDate").value;
 
       if (!seatNoInput || !examDateInput) {
         alert("Please enter Seat Number and Exam Date");
         return;
       }
 
+      if (studentData.length === 0) {
+        loadStudentData(() => matchStudent(seatNoInput, examDateInput));
+      } else {
+        matchStudent(seatNoInput, examDateInput);
+      }
+    }
+
+    function matchStudent(seatNo, examDate) {
       currentStudent = studentData.find(
-        s => s.SeatNo.toUpperCase() === seatNoInput && s.ExamDate === examDateInput
+        s => s.SeatNo.toUpperCase() === seatNo && s.ExamDate === examDate
       );
 
       if (currentStudent) {
