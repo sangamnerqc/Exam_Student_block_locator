@@ -30,7 +30,7 @@
   <div id="result">
     <h2>Student Details</h2>
     <p><strong>Name:</strong> <span id="name"></span></p>
-    <p><strong>Roll No:</strong> <span id="roll"></span></p>
+    <p><strong>Seat No:</strong> <span id="seat"></span></p>
     <p><strong>Building:</strong> <span id="building"></span></p>
     <p><strong>Block:</strong> <span id="block"></span></p>
     <button id="mapBtn" onclick="openMap()">View on Google Map</button>
@@ -38,6 +38,19 @@
 
   <script>
     const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLWAt7sXY_iv_GBv9S7YdN4TkH7Wy_zQq9d1D9ItxGchX7O81sO5NKc2KhD5PnpdAPTcbG7tCooRXa/pub?output=csv";
+
+    const buildingMapLinks = {
+      "PB": "https://maps.app.goo.gl/95EhvGe1MbxkAaYo6",
+      "KB": "https://maps.app.goo.gl/Qr3EHj2n9n8ihdJV6",
+      "RB": "https://maps.app.goo.gl/tNejbMhUYANjxXnRA",
+      "PH": "https://maps.app.goo.gl/HsWbkh2ALnSV82dAA",
+      "CM": "https://maps.app.goo.gl/jNMzzjPQ76ycuPhn7"
+      "CS": "https://maps.app.goo.gl/rFTkxD2hg6v1tYJS7",
+      "BEd": "https://maps.app.goo.gl/rFTkxD2hg6v1tYJS7",
+      "SC": "https://maps.app.goo.gl/dPnCS6jUWUNRxAdF7",
+      "LAW": "https://maps.app.goo.gl/4KWi7pgzgicfm4Vq9"
+      // Add more buildings as needed
+    };
 
     let studentData = [];
     let currentStudent = null;
@@ -68,7 +81,7 @@
         return;
       }
 
-      const formattedDate = formatDateToDDMMYYYY(examDateInput);  // Convert format
+      const formattedDate = formatDateToDDMMYYYY(examDateInput);
 
       if (studentData.length === 0) {
         loadStudentData(() => matchStudent(seatNoInput, formattedDate));
@@ -84,7 +97,7 @@
 
       if (currentStudent) {
         document.getElementById("name").textContent = currentStudent.Name;
-        document.getElementById("roll").textContent = currentStudent.RollNo;
+        document.getElementById("seat").textContent = currentStudent.SeatNo;
         document.getElementById("building").textContent = currentStudent.Building;
         document.getElementById("block").textContent = currentStudent.Block;
         document.getElementById("result").style.display = "block";
@@ -95,8 +108,15 @@
     }
 
     function openMap() {
-      if (currentStudent) {
-        window.open(currentStudent.MapURL, "_blank");
+      if (currentStudent && currentStudent.Building) {
+        const buildingName = currentStudent.Building.trim();
+        const mapURL = buildingMapLinks[buildingName];
+
+        if (mapURL) {
+          window.open(mapURL, "_blank");
+        } else {
+          alert("Map location for this building is not available.");
+        }
       }
     }
   </script>
