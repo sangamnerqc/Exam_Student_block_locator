@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Exam Block Finder</title>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+    }
+    #result {
+      margin-top: 30px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Find Your Exam Block</h1>
+
+  <input type="text" id="seatNo" placeholder="Enter Seat Number" />
+  <input type="date" id="examDate" />
+  <br>
+  <button onclick="findStudent()">Submit</button>
+
+  <div id="result">
+    <h2>Student Details</h2>
+    <p><strong>Name:</strong> <span id="name"></span></p>
+    <p><strong>Roll No:</strong> <span id="roll"></span></p>
+    <p><strong>Building:</strong> <span id="building"></span></p>
+    <p><strong>Block:</strong> <span id="block"></span></p>
+    <button id="mapBtn" onclick="openMap()">View on Google Map</button>
+  </div>
+
+  <script>
+    let studentData = [];
+    let currentStudent = null;
+
+    async function loadExcelData() {
+      // Raw GitHub URL of your Excel file
+      const url = "https://github.com/sangamnerqc/Exam_Student_block_locator/raw/main/sample_student_data.xlsx";
+      
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: "buffer" });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      studentData = XLSX.utils.sheet_to_json(sheet);
+    }
+
+    async function findStudent() {
+      if (studentData.length === 0) {
+        await loadExcelData();
+      }
+
+      const seatNo = document.getElementById("seatNo").value.trim();
+      const examDate = document.getElementById("examDate").value;
+
+      currentStudent = studentData.find(
+        s => s.SeatNo === seatNo && s.ExamDate === examDate
+      );
+
+      if (currentStudent) {
+        document.getElementById("name").textContent = currentStudent.Name;
+        document.getElementById("roll").textContent = currentStudent.RollNo;
+        document.getElementById("building").textContent = currentStudent.Building;
+        document.getElementById("block").textContent = currentStudent.Block;
+        document.getElementById("result").style.display = "block";
+      } else {
+        alert("Student not found. Please check your Seat No and Exam Date.");
+        document.getElementById("result").style.display = "none";
+      }
+    }
+
+    function openMap() {
+      if (currentStudent) {
+        window.open(currentStudent.MapURL, "_blank");
+      }
+    }
+  </script>
+</body>
+</html>
