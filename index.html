@@ -1,187 +1,181 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>Exam Block Finder — Today's Sheet</title>
+  <title>Exam Block Finder</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;text-align:center;padding:30px;}
-    input,button{padding:10px;margin:8px;}
-    #result{display:none;margin:20px auto;border:1px solid #ccc;padding:18px;border-radius:8px;width:340px;box-shadow:2px 2px 8px rgba(0,0,0,0.08)}
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+    }
+    #result {
+      margin-top: 30px;
+      display: none;
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    }
+    #college-logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: 10px;
+    }
+    #college-name {
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    #time {
+      color: red;
+      font-weight: bold;
+    }
+    footer {
+      margin-top: 50px;
+      font-size: 1em;
+      font-weight: bold;
+      color: #333;
+    }
   </style>
 </head>
 <body>
-  <h1>Find Your Exam Block (Today)</h1>
-  <p>Sheet selected automatically for <strong id="pickedDate">...</strong></p>
 
-  <input id="seatNo" type="text" placeholder="Enter Seat Number" />
-  <button id="submitBtn">Submit</button>
+  <!-- College Logo -->
+  <img src="logo.png" 
+       alt="College Logo" id="college-logo" />
+
+  <!-- College Name -->
+  <div id="college-name">Sangamner Nagarpalika Arts, D J Malpani Commerce & B N Sarda Science College (Autonomos), Sangamner </div>
+
+  <h1>Find Your Exam Block</h1>
+
+  <input type="text" id="seatNo" placeholder="Enter Seat Number" />
+  <input type="date" id="examDate" />
+  <br>
+  <button onclick="findStudent()">Submit</button>
 
   <div id="result">
-    <h3>Student Details</h3>
+    <h2>Student Details</h2>
     <p><strong>Name:</strong> <span id="name"></span></p>
-    <p><strong>Seat:</strong> <span id="seat"></span></p>
+    <p><strong>Seat No:</strong> <span id="seat"></span></p>
     <p><strong>Building:</strong> <span id="building"></span></p>
     <p><strong>Block:</strong> <span id="block"></span></p>
     <p><strong>Time:</strong> <span id="time"></span></p>
+    <button id="mapBtn" onclick="openMap()">View on Google Map</button>
   </div>
 
-  <p id="status" style="color:crimson;font-weight:bold;"></p>
+  <!-- Footer with your identity email -->
+  <footer>
+    &copy; 2025 ajitkaranjekar@sangamnercollege.edu.in
+  </footer>
 
-<script>
-/* ====== CONFIG: set your workbook ID (the long id in the sheet URL) ====== */
-const SHEET_ID = "1abcYourGoogleSheetIDxyz"; // <-- REPLACE with your sheet ID
+  <script>
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLWAt7sXY_iv_GBv9S7YdN4TkH7Wy_zQq9d1D9ItxGchX7O81sO5NKc2KhD5PnpdAPTcbG7tCooRXa/pub?output=csv";
 
-/* mapping for building display (optional) */
-const buildingNames = {
-  PB: "Parakh Bhavan", KB: "Kashalya Bhavan", RB: "Research Building",
-  PH: "Physics Building", CM: "Commerce Building", CS: "Computer Science",
-  BEd: "B.Ed. Building", SC: "Science Building", LAW: "Law College"
-};
+    const buildingNames = {
+      "PB": "Parakh Bhavan",
+      "KB": "Kashalya Bhavan",
+      "RB": "Research Building",
+      "PH": "Physics Building",
+      "CM": "Commerce Building",
+      "CS": "Computer Science",
+      "BEd": "B.Ed. Building",
+      "SC": "Science Building",
+      "LAW": "Law College"
+    };
 
-/* ---------- utility: today's date variants to match typical sheet names ---------- */
-function getDateVariants(dateObj){
-  const dd = String(dateObj.getDate()).padStart(2,'0');
-  const d = String(dateObj.getDate());
-  const mm = String(dateObj.getMonth()+1).padStart(2,'0');
-  const m = String(dateObj.getMonth()+1);
-  const yyyy = String(dateObj.getFullYear());
-  const yy = yyyy.slice(-2);
+    const buildingMapLinks = {
+      "PB": "https://maps.app.goo.gl/95EhvGe1MbxkAaYo6",
+      "KB": "https://maps.app.goo.gl/Qr3EHj2n9n8ihdJV6",
+      "RB": "https://maps.app.goo.gl/tNejbMhUYANjxXnRA",
+      "PH": "https://maps.app.goo.gl/HsWbkh2ALnSV82dAA",
+      "CM": "https://maps.app.goo.gl/jNMzzjPQ76ycuPhn7",
+      "CS": "https://maps.app.goo.gl/rFTkxD2hg6v1tYJS7",
+      "BEd": "https://maps.app.goo.gl/rFTkxD2hg6v1tYJS7",
+      "SC": "https://maps.app.goo.gl/dPnCS6jUWUNRxAdF7",
+      "LAW": "https://maps.app.goo.gl/4KWi7pgzgicfm4Vq9"
+    };
 
-  // month names
-  const monthNamesShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const monShort = monthNamesShort[dateObj.getMonth()];
-  const monthNamesLong = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  const monLong = monthNamesLong[dateObj.getMonth()];
+    let studentData = [];
+    let currentStudent = null;
 
-  // common formats to try (add or remove as needed)
-  return [
-    `${dd}-${mm}-${yyyy}`,   // 26-10-2025
-    `${d}-${m}-${yyyy}`,     // 26-10-2025 (same if zeros, but for single-digit day/month)
-    `${dd}-${mm}-${yy}`,     // 26-10-25
-    `${d}-${m}-${yy}`,       // 6-1-25
-    `${dd}/${mm}/${yyyy}`,   // 26/10/2025
-    `${dd}.${mm}.${yyyy}`,   // 26.10.2025
-    `${dd} ${monShort} ${yyyy}`, // 26 Oct 2025
-    `${dd}-${monShort}-${yyyy}`,  // 26-Oct-2025
-    `${dd} ${monLong} ${yyyy}`,  // 26 October 2025
-    `${yyyy}-${mm}-${dd}`,    // ISO style 2025-10-26
-    `${dd}${mm}${yyyy}`,      // 26102025
-    `${dd}-${mm}-${yyyy}`    // repeat to ensure at least one common format
-  ];
-}
+    function formatDateToDDMMYYYY(dateStr) {
+      const parts = dateStr.split("-");
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
 
-/* ---------- build CSV export URL for a particular sheet name ---------- */
-function sheetCsvUrlForSheetName(sheetName){
-  // gviz csv export of a named sheet in the same workbook:
-  // https://docs.google.com/spreadsheets/d/<ID>/gviz/tq?tqx=out:csv&sheet=<sheetName>
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-}
-
-/* ---------- Try formats in order until we get non-empty CSV ---------- */
-async function fetchTodaySheetData(){
-  const statusEl = document.getElementById('status');
-  statusEl.textContent = 'Detecting today\'s sheet...';
-  const today = new Date();
-  const variants = getDateVariants(today);
-
-  for (let i=0;i<variants.length;i++){
-    const sname = variants[i];
-    const url = sheetCsvUrlForSheetName(sname);
-    statusEl.textContent = `Trying sheet: "${sname}" (${i+1}/${variants.length})...`;
-    try {
-      // use Papa.parse to download and parse CSV
-      const parsed = await new Promise((resolve,reject)=>{
-        Papa.parse(url, {
-          download: true,
-          header: true,
-          skipEmptyLines: true,
-          complete: results => resolve(results),
-          error: err => reject(err)
-        });
+    function loadStudentData(callback) {
+      Papa.parse(sheetURL, {
+        download: true,
+        header: true,
+        complete: function(results) {
+          studentData = results.data;
+          callback();
+        }
       });
+    }
 
-      // check if parsed data has at least one useful row (non-empty)
-      if (parsed && parsed.data && parsed.data.length > 0) {
-        // sometimes Google returns a single empty row; check first row for any non-empty field
-        const hasContent = parsed.data.some(row => {
-          return Object.values(row).some(v => v !== null && String(v).trim() !== '');
-        });
-        if (hasContent){
-          document.getElementById('pickedDate').textContent = sname;
-          statusEl.style.color = 'green';
-          statusEl.textContent = `Loaded sheet: "${sname}"`;
-          return { sheetName: sname, data: parsed.data };
+    function findStudent() {
+      const seatNoInput = document.getElementById("seatNo").value.trim().toUpperCase();
+      const examDateInput = document.getElementById("examDate").value;
+
+      if (!seatNoInput || !examDateInput) {
+        alert("Please enter Seat Number and Exam Date");
+        return;
+      }
+
+      const formattedDate = formatDateToDDMMYYYY(examDateInput);
+
+      if (studentData.length === 0) {
+        loadStudentData(() => matchStudent(seatNoInput, formattedDate));
+      } else {
+        matchStudent(seatNoInput, formattedDate);
+      }
+    }
+
+    function matchStudent(seatNo, examDate) {
+      currentStudent = studentData.find(
+        s => s.SeatNo.toUpperCase() === seatNo && s.ExamDate === examDate
+      );
+
+      if (currentStudent) {
+        const buildingCode = currentStudent.Building.trim();
+        const buildingFullName = buildingNames[buildingCode] || buildingCode;
+        const blockInfo = `${buildingCode}-${currentStudent.Block}`;
+
+        document.getElementById("name").textContent = currentStudent.Name;
+        document.getElementById("seat").textContent = currentStudent.SeatNo;
+        document.getElementById("building").textContent = buildingFullName;
+        document.getElementById("block").textContent = blockInfo;
+        document.getElementById("time").textContent = currentStudent.Time || "Not available";
+
+        document.getElementById("result").style.display = "block";
+      } else {
+        alert("Student not found. Please check Seat Number and Exam Date.");
+        document.getElementById("result").style.display = "none";
+      }
+    }
+
+    function openMap() {
+      if (currentStudent && currentStudent.Building) {
+        const buildingCode = currentStudent.Building.trim();
+        const mapURL = buildingMapLinks[buildingCode];
+
+        if (mapURL) {
+          window.open(mapURL, "_blank");
+        } else {
+          alert("Map location for this building is not available.");
         }
       }
-    } catch (e) {
-      // ignore individual failures and try next variant
-      // but if CORS/403 occurs, it likely means sheet isn't published or id wrong
-      const errMsg = String(e && e.message ? e.message : e);
-      // quick check for common unrecoverable errors
-      if (errMsg.includes('403') || errMsg.includes('not authorized') || errMsg.includes('Failed to fetch')){
-        statusEl.style.color = 'crimson';
-        statusEl.textContent = `Cannot fetch sheet — check that the workbook is published to web and SHEET_ID is correct. (Error: ${errMsg})`;
-        throw new Error('Unrecoverable fetch error: ' + errMsg);
-      }
-      // else continue trying next format
     }
-  }
-  // none worked
-  statusEl.style.color = 'crimson';
-  statusEl.textContent = `No sheet found for today's date in tried formats. Please ensure a tab exists named like "DD-MM-YYYY" or one of the tried formats.`;
-  return null;
-}
-
-/* ---------- search by seat number and render ---------- */
-function renderStudent(student){
-  document.getElementById('result').style.display = 'block';
-  document.getElementById('name').textContent = student.Name || student.FullName || '';
-  document.getElementById('seat').textContent = student.SeatNo || student.Seat || '';
-  const bcode = (student.Building || student.Bldg || '').trim();
-  document.getElementById('building').textContent = buildingNames[bcode] || bcode || '';
-  document.getElementById('block').textContent = (student.Block || '') ;
-  document.getElementById('time').textContent = student.Time || student.ExamTime || 'Not available';
-}
-
-document.getElementById('submitBtn').addEventListener('click', async ()=>{
-  const seat = document.getElementById('seatNo').value.trim().toUpperCase();
-  if (!seat) { alert('Please enter Seat Number'); return; }
-
-  // fetch today's sheet (or the first matching format)
-  let sheetResult;
-  try {
-    sheetResult = await fetchTodaySheetData();
-  } catch (err) {
-    // fetchTodaySheetData already set meaningful status; stop
-    return;
-  }
-  if (!sheetResult) return;
-
-  // find the student row — tolerant key names (SeatNo, Seat, seat, etc.)
-  const rows = sheetResult.data;
-  const candidate = rows.find(r => {
-    // try all plausible seat fields
-    const seatFields = ['SeatNo','Seat','seat','Seat No','seatno'];
-    for (const f of seatFields){
-      if (r[f] && String(r[f]).trim().toUpperCase() === seat) return true;
-    }
-    // also try first column if header missing
-    const firstVal = Object.values(r)[0];
-    if (firstVal && String(firstVal).trim().toUpperCase() === seat) return true;
-    return false;
-  });
-
-  if (candidate){
-    renderStudent(candidate);
-    document.getElementById('status').style.color = 'green';
-    document.getElementById('status').textContent = `Found record in sheet "${sheetResult.sheetName}"`;
-  } else {
-    document.getElementById('status').style.color = 'crimson';
-    document.getElementById('status').textContent = `No record for Seat "${seat}" found in today's sheet ("${sheetResult.sheetName}").`;
-    document.getElementById('result').style.display = 'none';
-  }
-});
-</script>
+  </script>
 </body>
 </html>
