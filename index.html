@@ -13,15 +13,16 @@
       padding: 10px;
       margin: 10px;
     }
-    #result {
+    #results {
       margin-top: 30px;
       display: none;
+    }
+    .result-card {
       border: 1px solid #ccc;
       padding: 20px;
       border-radius: 10px;
-      width: 300px;
-      margin-left: auto;
-      margin-right: auto;
+      width: 320px;
+      margin: 15px auto;
       box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
     }
     #college-logo {
@@ -34,7 +35,7 @@
       font-weight: bold;
       margin-bottom: 20px;
     }
-    #time {
+    .time {
       color: red;
       font-weight: bold;
     }
@@ -48,31 +49,17 @@
 </head>
 <body>
 
-  <!-- College Logo -->
-  <img src="logo.png" 
-       alt="College Logo" id="college-logo" />
-
-  <!-- College Name -->
-  <div id="college-name">Sangamner Nagarpalika Arts, D J Malpani Commerce & B N Sarda Science College (Autonomos), Sangamner </div>
+  <img src="logo.png" alt="College Logo" id="college-logo" />
+  <div id="college-name">Sangamner Nagarpalika Arts, D J Malpani Commerce & B N Sarda Science College (Autonomous), Sangamner</div>
 
   <h1>Find Your Exam Block</h1>
-
   <input type="text" id="seatNo" placeholder="Enter Seat Number" />
   <input type="date" id="examDate" />
   <br>
   <button onclick="findStudent()">Submit</button>
 
-  <div id="result">
-    <h2>Student Details</h2>
-    <p><strong>Name:</strong> <span id="name"></span></p>
-    <p><strong>Seat No:</strong> <span id="seat"></span></p>
-    <p><strong>Building:</strong> <span id="building"></span></p>
-    <p><strong>Block:</strong> <span id="block"></span></p>
-    <p><strong>Time:</strong> <span id="time"></span></p>
-    <button id="mapBtn" onclick="openMap()">View on Google Map</button>
-  </div>
+  <div id="results"></div>
 
-  <!-- Footer with your identity email -->
   <footer>
     &copy; 2025 ajitkaranjekar@sangamnercollege.edu.in
   </footer>
@@ -105,7 +92,6 @@
     };
 
     let studentData = [];
-    let currentStudent = null;
 
     function formatDateToDDMMYYYY(dateStr) {
       const parts = dateStr.split("-");
@@ -135,45 +121,53 @@
       const formattedDate = formatDateToDDMMYYYY(examDateInput);
 
       if (studentData.length === 0) {
-        loadStudentData(() => matchStudent(seatNoInput, formattedDate));
+        loadStudentData(() => matchStudents(seatNoInput, formattedDate));
       } else {
-        matchStudent(seatNoInput, formattedDate);
+        matchStudents(seatNoInput, formattedDate);
       }
     }
 
-    function matchStudent(seatNo, examDate) {
-      currentStudent = studentData.find(
+    function matchStudents(seatNo, examDate) {
+      const matches = studentData.filter(
         s => s.SeatNo.toUpperCase() === seatNo && s.ExamDate === examDate
       );
 
-      if (currentStudent) {
-        const buildingCode = currentStudent.Building.trim();
-        const buildingFullName = buildingNames[buildingCode] || buildingCode;
-        const blockInfo = `${buildingCode}-${currentStudent.Block}`;
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = "";
 
-        document.getElementById("name").textContent = currentStudent.Name;
-        document.getElementById("seat").textContent = currentStudent.SeatNo;
-        document.getElementById("building").textContent = buildingFullName;
-        document.getElementById("block").textContent = blockInfo;
-        document.getElementById("time").textContent = currentStudent.Time || "Not available";
+      if (matches.length > 0) {
+        matches.forEach(student => {
+          const buildingCode = student.Building.trim();
+          const buildingFullName = buildingNames[buildingCode] || buildingCode;
+          const blockInfo = `${buildingCode}-${student.Block}`;
+          const timeInfo = student.Time || "Not available";
 
-        document.getElementById("result").style.display = "block";
+          const card = document.createElement("div");
+          card.classList.add("result-card");
+
+          card.innerHTML = `
+            <h2>${student.Name}</h2>
+            <p><strong>Seat No:</strong> ${student.SeatNo}</p>
+            <p><strong>Building:</strong> ${buildingFullName}</p>
+            <p><strong>Block:</strong> ${blockInfo}</p>
+            <p><strong>Time:</strong> <span class="time">${timeInfo}</span></p>
+            <button onclick="openMap('${buildingCode}')">View on Google Map</button>
+          `;
+          resultsDiv.appendChild(card);
+        });
+        resultsDiv.style.display = "block";
       } else {
-        alert("Student not found. Please check Seat Number and Exam Date.");
-        document.getElementById("result").style.display = "none";
+        alert("No record found. Please check the seat number or date.");
+        resultsDiv.style.display = "none";
       }
     }
 
-    function openMap() {
-      if (currentStudent && currentStudent.Building) {
-        const buildingCode = currentStudent.Building.trim();
-        const mapURL = buildingMapLinks[buildingCode];
-
-        if (mapURL) {
-          window.open(mapURL, "_blank");
-        } else {
-          alert("Map location for this building is not available.");
-        }
+    function openMap(buildingCode) {
+      const mapURL = buildingMapLinks[buildingCode];
+      if (mapURL) {
+        window.open(mapURL, "_blank");
+      } else {
+        alert("Map location for this building is not available.");
       }
     }
   </script>
