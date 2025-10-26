@@ -24,33 +24,17 @@
       margin-right: auto;
       box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
     }
-    #college-logo {
-      width: 120px;
-      height: auto;
-      margin-bottom: 10px;
-    }
-    #college-name {
-      font-size: 1.5em;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-    #time {
-      color: red;
-      font-weight: bold;
-    }
-    footer {
-      margin-top: 50px;
-      font-size: 1em;
-      font-weight: bold;
-      color: #333;
-    }
+    #college-logo { width: 120px; height: auto; margin-bottom: 10px; }
+    #college-name { font-size: 1.5em; font-weight: bold; margin-bottom: 20px; }
+    #time { color: red; font-weight: bold; }
+    footer { margin-top: 50px; font-size: 1em; font-weight: bold; color: #333; }
   </style>
 </head>
 <body>
 
   <img src="logo.png" alt="College Logo" id="college-logo" />
   <div id="college-name">
-    Sangamner Nagarpalika Arts, D J Malpani Commerce & B N Sarda Science College (Autonomos), Sangamner
+    Sangamner Nagarpalika Arts, D J Malpani Commerce & B N Sarda Science College (Autonomous), Sangamner
   </div>
 
   <h1>Find Your Exam Block</h1>
@@ -72,108 +56,96 @@
   <footer>&copy; 2025 ajitkaranjekar@sangamnercollege.edu.in</footer>
 
   <script>
-    // Base Sheet ID (change this to your sheet's ID)
-    const SHEET_BASE_ID = "2PACX-1vTLWAt7sXY_iv_GBv9S7YdN4TkH7Wy_zQq9d1D9ItxGchX7O81sO5NKc2KhD5PnpdAPTcbG7tCooRXa";
+    /* ======= CONFIGURATION ======= */
+    // Replace this with your own Sheet *ID* (from the URL)
+    const SHEET_ID = "1abcYourGoogleSheetIDxyz"; 
+    // The Sheet must be published to web (File → Share → Publish to web → Entire document).
 
     const buildingNames = {
-      "PB": "Parakh Bhavan",
-      "KB": "Kashalya Bhavan",
-      "RB": "Research Building",
-      "PH": "Physics Building",
-      "CM": "Commerce Building",
-      "CS": "Computer Science",
-      "BEd": "B.Ed. Building",
-      "SC": "Science Building",
-      "LAW": "Law College"
+      PB: "Parakh Bhavan",
+      KB: "Kashalya Bhavan",
+      RB: "Research Building",
+      PH: "Physics Building",
+      CM: "Commerce Building",
+      CS: "Computer Science",
+      BEd: "B.Ed. Building",
+      SC: "Science Building",
+      LAW: "Law College"
     };
 
     const buildingMapLinks = {
-      "PB": "https://maps.app.goo.gl/95EhvGe1MbxkAaYo6",
-      "KB": "https://maps.app.goo.gl/Qr3EHj2n9n8ihdJV6",
-      "RB": "https://maps.app.goo.gl/tNejbMhUYANjxXnRA",
-      "PH": "https://maps.app.goo.gl/HsWbkh2ALnSV82dAA",
-      "CM": "https://maps.app.goo.gl/jNMzzjPQ76ycuPhn7",
-      "CS": "https://maps.app.goo.gl/rFTkxD2hg6v1tYJS7",
-      "BEd": "https://maps.app.goo.gl/rFTkxD2hg6v1tYJS7",
-      "SC": "https://maps.app.goo.gl/dPnCS6jUWUNRxAdF7",
-      "LAW": "https://maps.app.goo.gl/4KWi7pgzgicfm4Vq9"
+      PB: "https://maps.app.goo.gl/95EhvGe1MbxkAaYo6",
+      KB: "https://maps.app.goo.gl/Qr3EHj2n9n8ihdJV6",
+      RB: "https://maps.app.goo.gl/tNejbMhUYANjxXnRA",
+      PH: "https://maps.app.goo.gl/HsWbkh2ALnSV82dAA",
+      CM: "https://maps.app.goo.gl/jNMzzjPQ76ycuPhn7",
+      CS: "https://maps.app.goo.gl/rFTkxD2hg6v1tYJS7",
+      BEd:"https://maps.app.goo.gl/rFTkxD2hg6v1tYJS7",
+      SC: "https://maps.app.goo.gl/dPnCS6jUWUNRxAdF7",
+      LAW:"https://maps.app.goo.gl/4KWi7pgzgicfm4Vq9"
     };
 
     let studentData = [];
     let currentStudent = null;
 
+    /* ---------- Get today's date in DD-MM-YYYY ---------- */
     function getTodayFormatted() {
       const today = new Date();
-      const dd = String(today.getDate()).padStart(2, '0');
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2,'0');
+      const mm = String(today.getMonth()+1).padStart(2,'0');
       const yyyy = today.getFullYear();
       return `${dd}-${mm}-${yyyy}`;
     }
 
-    function getSheetCSVUrl(sheetName) {
-      // Format: https://docs.google.com/spreadsheets/d/e/[SHEET_BASE_ID]/pub?gid=[sheet_gid]&single=true&output=csv
-      // But since you have separate sheets published individually to web as CSV, you can use:
-      return `https://docs.google.com/spreadsheets/d/e/${SHEET_BASE_ID}/pub?output=csv&sheet=${encodeURIComponent(sheetName)}`;
+    /* ---------- Build CSV link for today's sheet tab ---------- */
+    function getTodaySheetURL() {
+      const sheetName = getTodayFormatted();
+      // Direct CSV export of specific sheet
+      return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
     }
 
-    function loadStudentData(sheetName, callback) {
-      const sheetURL = getSheetCSVUrl(sheetName);
-      Papa.parse(sheetURL, {
+    function loadStudentData(callback) {
+      const url = getTodaySheetURL();
+      Papa.parse(url, {
         download: true,
         header: true,
-        complete: function(results) {
-          studentData = results.data;
-          callback();
-        },
-        error: function() {
-          alert("Data for today's date not found or not published yet.");
-        }
+        complete: results => { studentData = results.data; callback(); },
+        error: () => { alert("Today's sheet not found or not published."); }
       });
     }
 
     function findStudent() {
       const seatNoInput = document.getElementById("seatNo").value.trim().toUpperCase();
-      if (!seatNoInput) {
-        alert("Please enter your Seat Number");
-        return;
-      }
+      if (!seatNoInput) { alert("Please enter your Seat Number"); return; }
 
-      const todayDate = getTodayFormatted();
-
-      loadStudentData(todayDate, () => matchStudent(seatNoInput));
+      loadStudentData(() => matchStudent(seatNoInput));
     }
 
     function matchStudent(seatNo) {
-      currentStudent = studentData.find(
-        s => s.SeatNo && s.SeatNo.toUpperCase() === seatNo
-      );
+      currentStudent = studentData.find(s => s.SeatNo && s.SeatNo.toUpperCase() === seatNo);
 
       if (currentStudent) {
-        const buildingCode = currentStudent.Building.trim();
-        const buildingFullName = buildingNames[buildingCode] || buildingCode;
-        const blockInfo = `${buildingCode}-${currentStudent.Block}`;
+        const code = (currentStudent.Building || "").trim();
+        const name = buildingNames[code] || code;
+        const blockInfo = `${code}-${currentStudent.Block}`;
 
-        document.getElementById("name").textContent = currentStudent.Name;
-        document.getElementById("seat").textContent = currentStudent.SeatNo;
-        document.getElementById("building").textContent = buildingFullName;
+        document.getElementById("name").textContent = currentStudent.Name || "";
+        document.getElementById("seat").textContent = currentStudent.SeatNo || "";
+        document.getElementById("building").textContent = name;
         document.getElementById("block").textContent = blockInfo;
         document.getElementById("time").textContent = currentStudent.Time || "Not available";
         document.getElementById("result").style.display = "block";
       } else {
-        alert("No record found for your Seat Number in today's exam sheet.");
+        alert("No record found for your Seat Number in today's sheet.");
         document.getElementById("result").style.display = "none";
       }
     }
 
     function openMap() {
       if (currentStudent && currentStudent.Building) {
-        const buildingCode = currentStudent.Building.trim();
-        const mapURL = buildingMapLinks[buildingCode];
-        if (mapURL) {
-          window.open(mapURL, "_blank");
-        } else {
-          alert("Map location for this building is not available.");
-        }
+        const url = buildingMapLinks[currentStudent.Building.trim()];
+        if (url) window.open(url, "_blank");
+        else alert("Map location for this building not available.");
       }
     }
   </script>
