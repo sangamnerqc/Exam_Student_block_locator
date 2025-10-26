@@ -48,17 +48,14 @@
 </head>
 <body>
 
-  <!-- College Logo -->
-  <img src="logo.png" 
-       alt="College Logo" id="college-logo" />
-
-  <!-- College Name -->
-  <div id="college-name">Sangamner Nagarpalika Arts, D J Malpani Commerce & B N Sarda Science College (Autonomos), Sangamner </div>
+  <img src="logo.png" alt="College Logo" id="college-logo" />
+  <div id="college-name">
+    Sangamner Nagarpalika Arts, D J Malpani Commerce & B N Sarda Science College (Autonomos), Sangamner
+  </div>
 
   <h1>Find Your Exam Block</h1>
 
   <input type="text" id="seatNo" placeholder="Enter Seat Number" />
-  <input type="date" id="examDate" />
   <br>
   <button onclick="findStudent()">Submit</button>
 
@@ -72,13 +69,11 @@
     <button id="mapBtn" onclick="openMap()">View on Google Map</button>
   </div>
 
-  <!-- Footer with your identity email -->
-  <footer>
-    &copy; 2025 ajitkaranjekar@sangamnercollege.edu.in
-  </footer>
+  <footer>&copy; 2025 ajitkaranjekar@sangamnercollege.edu.in</footer>
 
   <script>
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLWAt7sXY_iv_GBv9S7YdN4TkH7Wy_zQq9d1D9ItxGchX7O81sO5NKc2KhD5PnpdAPTcbG7tCooRXa/pub?output=csv";
+    // Base Sheet ID (change this to your sheet's ID)
+    const SHEET_BASE_ID = "2PACX-1vTLWAt7sXY_iv_GBv9S7YdN4TkH7Wy_zQq9d1D9ItxGchX7O81sO5NKc2KhD5PnpdAPTcbG7tCooRXa";
 
     const buildingNames = {
       "PB": "Parakh Bhavan",
@@ -107,43 +102,50 @@
     let studentData = [];
     let currentStudent = null;
 
-    function formatDateToDDMMYYYY(dateStr) {
-      const parts = dateStr.split("-");
-      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    function getTodayFormatted() {
+      const today = new Date();
+      const dd = String(today.getDate()).padStart(2, '0');
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const yyyy = today.getFullYear();
+      return `${dd}-${mm}-${yyyy}`;
     }
 
-    function loadStudentData(callback) {
+    function getSheetCSVUrl(sheetName) {
+      // Format: https://docs.google.com/spreadsheets/d/e/[SHEET_BASE_ID]/pub?gid=[sheet_gid]&single=true&output=csv
+      // But since you have separate sheets published individually to web as CSV, you can use:
+      return `https://docs.google.com/spreadsheets/d/e/${SHEET_BASE_ID}/pub?output=csv&sheet=${encodeURIComponent(sheetName)}`;
+    }
+
+    function loadStudentData(sheetName, callback) {
+      const sheetURL = getSheetCSVUrl(sheetName);
       Papa.parse(sheetURL, {
         download: true,
         header: true,
         complete: function(results) {
           studentData = results.data;
           callback();
+        },
+        error: function() {
+          alert("Data for today's date not found or not published yet.");
         }
       });
     }
 
     function findStudent() {
       const seatNoInput = document.getElementById("seatNo").value.trim().toUpperCase();
-      const examDateInput = document.getElementById("examDate").value;
-
-      if (!seatNoInput || !examDateInput) {
-        alert("Please enter Seat Number and Exam Date");
+      if (!seatNoInput) {
+        alert("Please enter your Seat Number");
         return;
       }
 
-      const formattedDate = formatDateToDDMMYYYY(examDateInput);
+      const todayDate = getTodayFormatted();
 
-      if (studentData.length === 0) {
-        loadStudentData(() => matchStudent(seatNoInput, formattedDate));
-      } else {
-        matchStudent(seatNoInput, formattedDate);
-      }
+      loadStudentData(todayDate, () => matchStudent(seatNoInput));
     }
 
-    function matchStudent(seatNo, examDate) {
+    function matchStudent(seatNo) {
       currentStudent = studentData.find(
-        s => s.SeatNo.toUpperCase() === seatNo && s.ExamDate === examDate
+        s => s.SeatNo && s.SeatNo.toUpperCase() === seatNo
       );
 
       if (currentStudent) {
@@ -156,10 +158,9 @@
         document.getElementById("building").textContent = buildingFullName;
         document.getElementById("block").textContent = blockInfo;
         document.getElementById("time").textContent = currentStudent.Time || "Not available";
-
         document.getElementById("result").style.display = "block";
       } else {
-        alert("Student not found. Please check Seat Number and Exam Date.");
+        alert("No record found for your Seat Number in today's exam sheet.");
         document.getElementById("result").style.display = "none";
       }
     }
@@ -168,7 +169,6 @@
       if (currentStudent && currentStudent.Building) {
         const buildingCode = currentStudent.Building.trim();
         const mapURL = buildingMapLinks[buildingCode];
-
         if (mapURL) {
           window.open(mapURL, "_blank");
         } else {
