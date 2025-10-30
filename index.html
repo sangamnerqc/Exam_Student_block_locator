@@ -50,7 +50,9 @@
 <body>
 
   <img src="logo.png" alt="College Logo" id="college-logo" />
-  <div id="college-name">Sangamner Nagarpalika Arts, D J Malpani Commerce & B N Sarda Science College (Autonomous), Sangamner</div>
+  <div id="college-name">
+    Sangamner Nagarpalika Arts, D J Malpani Commerce & B N Sarda Science College (Autonomous), Sangamner
+  </div>
 
   <h1>Find Your Exam Block</h1>
   <input type="text" id="seatNo" placeholder="Enter Seat Number" />
@@ -137,28 +139,83 @@
 
       if (matches.length > 0) {
         matches.forEach(student => {
-          const buildingCode = student.Building.trim();
-          const buildingFullName = buildingNames[buildingCode] || buildingCode;
-          const blockInfo = `${buildingCode}-${student.Block}`;
-          const timeInfo = student.Time || "Not available";
+          const { status, showDetails } = getExamDisplayStatus(student.Time);
 
           const card = document.createElement("div");
           card.classList.add("result-card");
 
-          card.innerHTML = `
-            <h2>${student.Name}</h2>
-            <p><strong>Seat No:</strong> ${student.SeatNo}</p>
-            <p><strong>Building:</strong> ${buildingFullName}</p>
-            <p><strong>Block:</strong> ${blockInfo}</p>
-            <p><strong>Time:</strong> <span class="time">${timeInfo}</span></p>
-            <button onclick="openMap('${buildingCode}')">View on Google Map</button>
-          `;
+          if (showDetails) {
+            const buildingCode = student.Building.trim();
+            const buildingFullName = buildingNames[buildingCode] || buildingCode;
+            const blockInfo = `${buildingCode}-${student.Block}`;
+            const timeInfo = student.Time || "Not available";
+
+            card.innerHTML = `
+              <h2>${student.Name}</h2>
+              <p><strong>Seat No:</strong> ${student.SeatNo}</p>
+              <p><strong>Building:</strong> ${buildingFullName}</p>
+              <p><strong>Block:</strong> ${blockInfo}</p>
+              <p><strong>Time:</strong> <span class="time">${timeInfo}</span></p>
+              <button onclick="openMap('${buildingCode}')">View on Google Map</button>
+            `;
+          } else {
+            card.innerHTML = `<p class="time">${status}</p>`;
+          }
+
           resultsDiv.appendChild(card);
         });
         resultsDiv.style.display = "block";
       } else {
         alert("No record found. Please check the seat number or date.");
         resultsDiv.style.display = "none";
+      }
+    }
+
+    function getExamDisplayStatus(timeStr) {
+      if (!timeStr) return { status: "Invalid time data", showDetails: false };
+
+      const parts = timeStr.split("TO");
+      if (parts.length !== 2) return { status: "Invalid time format", showDetails: false };
+
+      const start = parts[0].trim();
+      const end = parts[1].trim();
+
+      const now = new Date();
+      const today = new Date(now.toDateString());
+
+      function parseTime(t) {
+        const [time, period] = t.split(" ");
+        const [hour, minute] = time.split(".").map(Number);
+        let h = hour;
+        if (period.toUpperCase().includes("P") && h !== 12) h += 12;
+        if (period.toUpperCase().includes("A") && h === 12) h = 0;
+        return new Date(today.getFullYear(), today.getMonth(), today.getDate(), h, minute || 0);
+      }
+
+      const startTime = parseTime(start);
+      const endTime = parseTime(end);
+      const before30 = new Date(startTime.getTime() - 30 * 60000);
+      const after30 = new Date(startTime.getTime() + 30 * 60000);
+
+      if (now < before30) {
+        return {
+          status: `Check details at ${formatTime(before30)}.`,
+          showDetails: false
+        };
+      } else if (now >= before30 && now <= after30) {
+        return { status: "", showDetails: true };
+      } else if (now > after30 && now <= endTime) {
+        return { status: "Exam has already started. You cannot check details now.", showDetails: false };
+      } else if (now > endTime) {
+        return { status: "Exam is over.", showDetails: false };
+      }
+
+      function formatTime(d) {
+        let h = d.getHours();
+        const m = d.getMinutes().toString().padStart(2, "0");
+        const ampm = h >= 12 ? "P.M." : "A.M.";
+        h = h % 12 || 12;
+        return `${h}:${m} ${ampm}`;
       }
     }
 
